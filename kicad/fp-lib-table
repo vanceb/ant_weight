@@ -1,0 +1,6 @@
+(fp_lib_table
+  (lib (name HRP)(type KiCad)(uri "$(KIPRJMOD)/libs/custom/HRP.pretty")(options "")(descr ""))
+  (lib (name xbee)(type KiCad)(uri "$(KIPRJMOD)/libs/custom/xbee.pretty")(options "")(descr ""))
+  (lib (name ESP32-footprints-Lib)(type KiCad)(uri "$(KIPRJMOD)/libs/ESP32-footprints-Lib.pretty")(options "")(descr ""))
+  (lib (name Pushbutton)(type KiCad)(uri "$(KIPRJMOD)/libs/custom/Pushbutton.pretty")(options "")(descr ""))
+)
