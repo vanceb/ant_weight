@@ -659,7 +659,7 @@ Text GLabel 8150 4500 2    60   Output ~ 0
 W_FWD
 Text GLabel 8150 4600 2    60   Output ~ 0
 W_REV
-Text GLabel 6300 5150 0    60   Output ~ 0
+Text GLabel 6300 5350 0    60   Output ~ 0
 R_FWD
 Text GLabel 6300 5250 0    60   Output ~ 0
 R_REV
@@ -889,7 +889,6 @@ E_SCL
 Text GLabel 6300 5650 0    60   BiDi ~ 0
 E_SDA
 NoConn ~ 6300 4950
-NoConn ~ 6300 5350
 NoConn ~ 8150 5600
 NoConn ~ 8150 4900
 $Comp
@@ -1712,4 +1711,6 @@ Wire Wire Line
 	8050 1350 8250 1350
 Text Notes 7650 3100 0    60   ~ 0
 ** DO NOT SHORT THESE PINS **\nUnless you know what you are doing!\n\nThis header allows for the\nuse of a single 3V3 supply\nto power the Pi, negating\nthe need for the 5V regulator.\n\nBe aware that some of the Pi hardware\nwill not operate on less than 5V.\nUSB and HDMI being some...\n\nShort these pins together to\nactivate, but only if you have\nnot fitted the 5V regulator :-)
+NoConn ~ 6300 5150
+NoConn ~ 6500 5100
 $EndSCHEMATC
