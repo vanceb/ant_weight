@@ -1,0 +1,5 @@
+code/build/
+.DS_Store
+*.bak
+*.old
+*.kicad_pcb-bak
