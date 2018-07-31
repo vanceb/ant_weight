@@ -1,4 +1,4 @@
-(module HRP7 (layer F.Cu) (tedit 5B509314)
+(module HRP7 (layer F.Cu) (tedit 5B59FDD4)
   (fp_text reference REF** (at 0 -12) (layer F.SilkS)
     (effects (font (size 1 1) (thickness 0.15)))
   )
@@ -72,7 +72,7 @@
   (pad FIN thru_hole rect (at -2 -6.5) (size 1.1 1.1) (drill 0.3) (layers *.Cu *.Mask))
   (pad FIN thru_hole rect (at -2 -7.5) (size 1.1 1.1) (drill 0.3) (layers *.Cu *.Mask))
   (pad FIN thru_hole rect (at -2 -8.5) (size 1.1 1.1) (drill 0.3) (layers *.Cu *.Mask))
-  (pad FIN smd circle (at 0 -6) (size 3 3) (layers F.Cu F.Paste F.Mask))
+  (pad FIN smd circle (at 0 -6) (size 6 6) (layers F.Cu F.Paste F.Mask))
   (model /Users/vance/Dropbox/Projects/Ant_Weight/kicad/libs/custom/HRP.pretty/HRP7.wrl
     (at (xyz 0 0.2 0))
     (scale (xyz 0.3937 0.3937 0.3937))

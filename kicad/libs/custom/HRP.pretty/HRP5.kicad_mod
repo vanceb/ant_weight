@@ -1,4 +1,4 @@
-(module HRP5 (layer F.Cu) (tedit 5B4080A5)
+(module HRP5 (layer F.Cu) (tedit 5B59FDBC)
   (fp_text reference REF** (at 0 -6.5) (layer F.SilkS)
     (effects (font (size 1 1) (thickness 0.15)))
   )
@@ -70,7 +70,7 @@
   (pad 3 thru_hole rect (at -1.8 -4.425) (size 1.2 1.2) (drill 0.3) (layers *.Cu *.Mask))
   (pad 3 thru_hole rect (at -3 -4.425) (size 1.2 1.2) (drill 0.3) (layers *.Cu *.Mask))
   (pad 3 thru_hole rect (at -4.2 -4.425) (size 1.2 1.2) (drill 0.3) (layers *.Cu *.Mask))
-  (pad 3 smd circle (at 0 -0.6) (size 3 3) (layers F.Cu F.Paste F.Mask))
+  (pad 3 smd circle (at 0 -0.6) (size 6 6) (layers F.Cu F.Paste F.Mask))
   (model /Users/vance/Dropbox/Projects/ESP32_Clock/kicad/libs/custom/LDO.pretty/HRP5.wrl
     (at (xyz 0.195 -0.145 0))
     (scale (xyz 0.392 0.392 0.392))
