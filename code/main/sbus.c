@@ -19,9 +19,15 @@ uint16_t channel[NUM_CHANNELS];
 /* Create a queue for the UART events */
 static QueueHandle_t uart0_queue;
 
+/* Define framecount */
+unsigned long sbus_rx_framecount;
+
 /* uart - should be one of the UARTs UART_NUM_0, 1, or 2 */
 int sbus_rx_init(int uart, int rx_pin)
 {
+    /* Initialise the framecount */
+    sbus_rx_framecount = 0;
+
     int resp;
     /* Store the UART number for future use */
     EX_UART_NUM = uart;
@@ -126,17 +132,7 @@ void sbus_event_task(void *pvParameters)
                     uart_read_bytes(EX_UART_NUM, dtmp, event.size, portMAX_DELAY);
                     if (event.size == 25) {
                         if(sbus_decode(dtmp, channel)) {
-                            if (j%50==0) {
-                                for(i=0; i<NUM_CHANNELS; i++) {
-                                    sprintf(&outbuffer[i*6], "%4d  ", channel[i]);
-                                }
-                                //ESP_LOGI(TAG, "Channels: %s", outbuffer);
-                                ESP_LOGD(TAG, "Left: %3.0f, Right: %3.0f, Weapon: %3.0f",
-                                         left(channel[0], channel[1], channel[4], channel[5]),
-                                         right(channel[0], channel[1], channel[4], channel[5]),
-                                         weapon(channel[2])
-                                        );
-                            }
+                            sbus_rx_framecount++;
                             update_motors(channel);
                         } else {
                             ESP_LOGE(TAG, "%s", "Decode of SBus Data failed");

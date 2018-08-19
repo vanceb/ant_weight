@@ -11,10 +11,6 @@
 #define GPIO_WPN_A 23
 #define GPIO_WPN_B 22
 
-/* What proportion should we mix in the turning and speed? */
-#define TURN_MIX 1.0
-#define SPEED_MIX 1.0
-
 /* Value below which motors do not drive */
 #define DEAD_ZONE 0.05
 #define WPN_DEAD_ZONE 0.5
