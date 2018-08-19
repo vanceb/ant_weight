@@ -58,23 +58,43 @@ static void brushed_motor_stop(mcpwm_unit_t mcpwm_num, mcpwm_timer_t timer_num)
     mcpwm_set_signal_low(mcpwm_num, timer_num, MCPWM_OPR_B);
 }
 
-extern float left(uint16_t fwd, uint16_t turn)
+/* Normalise takes a channel value and returns a float */
+float normalise(uint16_t value, int zero_centred) 
 {
-    float val = (float)((fwd - CHANNEL_MID) + (TURN_MIX * (turn - CHANNEL_MID))) * 100.0 / CHANNEL_RANGE;
-    val = val > 100.0 ? 100.0 : val;
-    val = val < -100.0 ? -100.0 : val;
-    val = (val > -DEAD_ZONE && val < DEAD_ZONE) ? 0.0 : val;
-    val = (failsafe == SBUS_RX_FAILSAFE) ? 0.0 : val;
-    return val;
+    if (zero_centred)
+        return ((value - CHANNEL_MID) / CHANNEL_RANGE);
+    else
+        return (value / (CHANNEL_RANGE * 2));
 }
-extern float right(uint16_t fwd, uint16_t turn)
+
+/* Limit modifies value so that it lies within a range and with a potential dead zone */
+float limit(float value, float dead_zone)
 {
-    float val = (float)((fwd - CHANNEL_MID) - (TURN_MIX * (turn - CHANNEL_MID))) * 100.0 / CHANNEL_RANGE;
-    val = val > 100.0 ? 100.0 : val;
-    val = val < -100.0 ? -100.0 : val;
-    val = (val > -DEAD_ZONE && val < DEAD_ZONE) ? 0.0 : val;
-    val = (failsafe == SBUS_RX_FAILSAFE) ? 0.0 : val;
-    return val;
+    /* Make sure dead_zone is positive */
+    if (dead_zone < 0.0)
+        dead_zone = -dead_zone;
+    /* Apply limits */
+    value = value > 1.0 ? 1.0 : value;
+    value = value < -1.0 ? -1.0 : value;
+    value = (value > -dead_zone && value < dead_zone) ? 0.0 : value;
+    /* If failsafe is activated then zero all outputs */
+    value = (failsafe == SBUS_RX_FAILSAFE) ? 0.0 : value;
+    return value;
+}
+
+extern float left(uint16_t fwd, uint16_t turn, uint16_t max_speed, uint16_t max_turn)
+{
+    return 100.0 * limit(((limit(normalise(fwd, 1), DEAD_ZONE) * normalise(max_speed, 0)) + 
+                             (limit(normalise(turn, 1), DEAD_ZONE) * normalise(max_turn, 0))), 0.0);
+}
+extern float right(uint16_t fwd, uint16_t turn, uint16_t max_speed, uint16_t max_turn)
+{
+    return 100.0 * limit(((limit(normalise(fwd, 1), DEAD_ZONE) * normalise(max_speed, 0)) -
+                             (limit(normalise(turn, 1), DEAD_ZONE) * normalise(max_turn, 0))), 0.0);
+}
+extern float weapon(uint16_t wpn)
+{
+    return 100.0 * limit(normalise(wpn, 1), WPN_DEAD_ZONE);
 }
 
 extern void l_motor(float speed)
@@ -129,6 +149,21 @@ extern void motors_init(void)
     mcpwm_init(MCPWM_UNIT_0, MCPWM_TIMER_1, &pwm_config);    
     mcpwm_init(MCPWM_UNIT_0, MCPWM_TIMER_2, &pwm_config);    
 }
+
+extern void update_motors(uint16_t *channel)
+{
+    uint16_t speed = channel[0];
+    uint16_t turn = channel[1];
+    uint16_t wpn = channel[2];
+    uint16_t speed_max = channel[4];
+    uint16_t turn_max = channel[5];
+    
+
+    l_motor(left(speed, turn, speed_max, turn_max));
+    r_motor(right(speed, turn, speed_max, turn_max));
+    w_motor(weapon(wpn));
+}
+
 /*
 void app_main()
 {

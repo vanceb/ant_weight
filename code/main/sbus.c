@@ -13,7 +13,7 @@ static const char TAG[] = "sbusRx";
 static int EX_UART_NUM;
 
 /* Initialise global extern variables listed in the header */
-int failsafe;
+int failsafe = SBUS_RX_FAILSAFE;
 uint16_t channel[NUM_CHANNELS];
 
 /* Create a queue for the UART events */
@@ -105,14 +105,6 @@ static int sbus_decode(uint8_t *sbus, uint16_t *channel)
     return 1;
 }
 
-void update_motors(uint16_t *channel)
-{
-    int16_t speed = channel[0];
-    int16_t turn = channel[1];
-    l_motor(left(speed, turn));
-    r_motor(right(speed, turn));
-}
-
 void sbus_event_task(void *pvParameters)
 {
     int i, j;
@@ -139,7 +131,11 @@ void sbus_event_task(void *pvParameters)
                                     sprintf(&outbuffer[i*6], "%4d  ", channel[i]);
                                 }
                                 //ESP_LOGI(TAG, "Channels: %s", outbuffer);
-                                ESP_LOGD(TAG, "Left: %3.0f, Right: %3.0f", left(channel[0], channel[1]), right(channel[0], channel[1]));
+                                ESP_LOGD(TAG, "Left: %3.0f, Right: %3.0f, Weapon: %3.0f",
+                                         left(channel[0], channel[1], channel[4], channel[5]),
+                                         right(channel[0], channel[1], channel[4], channel[5]),
+                                         weapon(channel[2])
+                                        );
                             }
                             update_motors(channel);
                         } else {

@@ -7,6 +7,7 @@
    CONDITIONS OF ANY KIND, either express or implied.
 */
 #include <stdio.h>
+#include <time.h>
 #include <esp_log.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -23,6 +24,9 @@
 #define BLINK_GPIO_1 19
 #define BLINK_GPIO_2 18
 
+#define BLINK_INTERVAL 500 //ms
+#define UPDATE_DELAY 100 //ms - max 10Hz
+#define RX_LOST_TIMEOUT 500 //ms
 #define NUM_LEDS 6
 static const char *TAG = "blink";
 uint8_t leds[] = {18, 19, 22, 23, 32, 33};
@@ -32,6 +36,11 @@ void delay(uint32_t ms)
   if (ms > 0) {
     vTaskDelay(ms / portTICK_PERIOD_MS);
   }
+}
+
+inline unsigned long clock_ms()
+{
+    return (1000 * clock()) / CLOCKS_PER_SEC;
 }
 
 void blink_task(void *pvParameter)
@@ -104,24 +113,83 @@ void ledStrandSetup(void) {
     ESP_LOGD(TAG, "Initialised strands");
 }
 
+void flash(strand_t *strand, pixelColor_t color)
+{
+    int i;
+    pixelColor_t dark = pixelFromRGB(0,0,0);
+    for (i=0; i<strand->numPixels; i++)
+        if(strand->pixels[i].r == dark.r &&
+           strand->pixels[i].g == dark.g &&
+           strand->pixels[i].b == dark.b
+        )
+            strand->pixels[i] = color;
+        else
+            strand->pixels[i] = dark;
+}
+
+void set_color(strand_t *strand, pixelColor_t color)
+{
+    int i;
+    for (i=0; i<strand->numPixels; i++)
+        strand->pixels[i] = color;
+}
+
+void set_front_color(strand_t *strand, pixelColor_t color)
+{
+    strand->pixels[0] = strand->pixels[1] = color;
+}
+
+void set_rear_color(strand_t *strand, pixelColor_t color)
+{
+    strand->pixels[2] = strand->pixels[3] = color;
+}
 
 void indicator_task(void *pvParameter)
 {
     int i;
+    unsigned long last_update = clock_ms();
+    unsigned long last_good = 0;
+
     /* Create the pointer to the strand used by the library */
     strand_t *strand = &STRANDS[0];
 
+    pixelColor_t dark = pixelFromRGB(0,0,0);
+    pixelColor_t red = pixelFromRGB(255,0,0);
+    pixelColor_t green = pixelFromRGB(0,255,0);
+    pixelColor_t blue = pixelFromRGB(0,0,255);
+    pixelColor_t amber = pixelFromRGB(255, 64, 0);
+    pixelColor_t white = pixelFromRGB(255, 255, 255);
+
     for (;;) {
-        for (i=0; i<strand->numPixels; i++) {
-            strand->pixels[i] = pixelFromRGB(32,16,0);   
+        switch (failsafe) {
+            case SBUS_RX_OK:
+                /* Normal indication */
+                set_front_color(strand, white);
+                set_rear_color(strand, red);
+                last_update = clock_ms();
+                last_good = clock_ms();
+                break;
+            case SBUS_RX_LOST:
+                /* Reception Lost */
+                /* This seems to happen a lot */
+                if (last_good + RX_LOST_TIMEOUT < clock_ms()) {
+                    set_color(strand, blue);
+                    last_update = clock_ms();
+                }
+                break;
+            case SBUS_RX_FAILSAFE:
+                /* Failsafe initiatied */
+                if ((last_update + BLINK_INTERVAL) < clock_ms()) {
+                    flash(strand, amber);
+                    last_update = clock_ms();
+                }
+                break;
+            default:
+                /* Should not get here! */
+                ESP_LOGE(TAG, "Unknown SBus receive state");
         }
         digitalLeds_updatePixels(strand);
-        delay(500);
-        for (i=0; i<strand->numPixels; i++) {
-            strand->pixels[i] = pixelFromRGB(0,0,0);   
-        }
-        digitalLeds_updatePixels(strand);
-        delay(500);
+        delay(UPDATE_DELAY);
     }
     vTaskDelete(NULL);
 }
