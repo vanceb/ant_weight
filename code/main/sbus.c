@@ -22,6 +22,16 @@ static QueueHandle_t uart0_queue;
 /* Define framecount */
 unsigned long sbus_rx_framecount;
 
+/* Get switch state from value */
+int switch_position(uint16_t value)
+{
+    if (value < SWITCH_OFF_VAL)
+        return SWITCH_OFF;
+    if (value < SWITCH_MID_VAL)
+        return SWITCH_MID;
+    return SWITCH_ON;
+}
+
 /* uart - should be one of the UARTs UART_NUM_0, 1, or 2 */
 int sbus_rx_init(int uart, int rx_pin)
 {

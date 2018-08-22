@@ -24,6 +24,7 @@
 #include "soc/mcpwm_reg.h"
 #include "soc/mcpwm_struct.h"
 
+#include "hardware.h"
 #include "motor.h"
 #include "sbus.h"
 

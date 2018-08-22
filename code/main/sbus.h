@@ -27,24 +27,16 @@ enum Switch_State {
 #define SWITCH_OFF_VAL 200
 #define SWITCH_MID_VAL 1000
 
-/* Get switch state from value */
-inline int switch_position(uint16_t value)
-{
-    if (value < SWITCH_OFF_VAL)
-        return SWITCH_OFF;
-    if (value < SWITCH_MID_VAL)
-        return SWITCH_MID;
-    return SWITCH_ON;
-}
-
 /* Variables that are updated from the SBus Receiver */
 extern int failsafe; /* Takes one of the SBus_Rx_State values */
 extern uint16_t channel[NUM_CHANNELS]; /* Decoded SBus channels */
-extern unsigned long sbus_rx_framecount; /* Count he number of frames received */
+extern unsigned long sbus_rx_framecount; /* Count the number of frames received */
 
 /* Run once to initialise the uart to receive SBus */
 extern int sbus_rx_init(int uart, int rx_pin);
 /* Task to run to receive sbus data and decode it */
 extern void sbus_event_task(void *pvParameters);
+/* Determine switch position from channel value */
+extern int switch_position(uint16_t value);
 
 #endif
