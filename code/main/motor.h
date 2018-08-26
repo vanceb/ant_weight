@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 /* Value below which motors do not drive */
+#define NO_DEAD_ZONE 0.0
 #define DEAD_ZONE 0.05
 #define WPN_DEAD_ZONE 0.5
 

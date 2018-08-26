@@ -30,6 +30,12 @@
 
 static char TAG[] = "motor";
 
+enum zero_centred {
+    UNSIGNED = 0,
+    SIGNED = 1
+};
+
+
 /**
  * @brief motor moves in forward direction, with duty cycle = duty %
  * duty_cycle should be in the range 0.0 - 100.0 %
@@ -95,28 +101,52 @@ float limit(float value, float dead_zone)
     return value;
 }
 
-/* Calculate the left motor drive % depending on the control inputs */
-extern float left(uint16_t fwd, uint16_t turn, uint16_t max_speed, uint16_t max_turn)
+/* Convert from channel values to a float*/
+float convert(uint16_t channel_value, int zero_centered, float dead_zone)
 {
-    return 100.0 * limit(((limit(normalise(fwd, 1), DEAD_ZONE) * normalise(max_speed, 0)) + 
-                             (limit(normalise(turn, 1), DEAD_ZONE) * normalise(max_turn, 0))), 0.0);
+    return limit(normalise(channel_value, zero_centered), dead_zone);
+}
+
+/* Calculate the left motor drive % depending on the control inputs */
+float left(float speed, float turn, float max_speed, float max_turn)
+{
+    return 100.0 * (speed * max_speed + turn * max_turn);
 }
 
 /* Calculate the right motor drive % depending on the control inputs */
-extern float right(uint16_t fwd, uint16_t turn, uint16_t max_speed, uint16_t max_turn)
+float right(float speed, float turn, float max_speed, float max_turn)
 {
-    return 100.0 * limit(((limit(normalise(fwd, 1), DEAD_ZONE) * normalise(max_speed, 0)) -
-                             (limit(normalise(turn, 1), DEAD_ZONE) * normalise(max_turn, 0))), 0.0);
+    return 100.0 * (speed * max_speed - turn * max_turn);
 }
 
 /* Calculate the weapon motor drive % depending on the control inputs */
-extern float weapon(uint16_t wpn)
+float weapon(float wpn, int mode)
 {
-    return 100.0 * limit(normalise(wpn, 1), WPN_DEAD_ZONE);
+    /* Weapon mode switch gives:
+        SWITCH_OFF:  100% in either direction
+        SWITCH_MID:  50% of demand
+        SWITCH_ON:   full control
+     */
+    switch (mode) {
+        case SWITCH_OFF:
+            wpn = limit(wpn, WPN_DEAD_ZONE);
+            wpn = wpn < 0.0 ? -1.0 : wpn > 0.0 ? 1.0 : 0.0;
+            break;
+        case SWITCH_MID:
+            wpn = limit(wpn, DEAD_ZONE);
+            wpn *= 0.5;
+            break;
+        case SWITCH_ON:
+            wpn = limit(wpn, DEAD_ZONE);
+            break;
+        default:
+            ESP_LOGE(TAG, "%s", "Weapon mode switch in unknown position");
+    }
+    return 100.0 * wpn;
 }
 
 /* Drive the left motor based on an input of -1.0 - 1.0 */
-extern void l_motor(float speed)
+void l_motor(float speed)
 {
     if (speed >= 0.0) {
         brushed_motor_forward(MCPWM_UNIT_0, MCPWM_TIMER_0, speed);
@@ -127,7 +157,7 @@ extern void l_motor(float speed)
 }
 
 /* Drive the right motor based on an input of -1.0 - 1.0 */
-extern void r_motor(float speed)
+void r_motor(float speed)
 {
     if (speed >= 0.0) {
         brushed_motor_forward(MCPWM_UNIT_0, MCPWM_TIMER_1, speed);
@@ -138,7 +168,7 @@ extern void r_motor(float speed)
 }
 
 /* Drive the weapon motor based on an input of -1.0 - 1.0 */
-extern void w_motor(float speed)
+void w_motor(float speed)
 {
     if (speed >= 0.0) {
         brushed_motor_forward(MCPWM_UNIT_0, MCPWM_TIMER_2, speed);
@@ -178,38 +208,44 @@ extern void motors_init(void)
 /* Update the motors based on the received control inputs */
 extern void update_motors(uint16_t *channel)
 {
-    uint16_t speed = channel[0];
-    uint16_t turn = channel[1];
-    uint16_t wpn = channel[2];
-    uint16_t unused = channel[3];
-    uint16_t speed_max = channel[4];
-    uint16_t turn_max = channel[5];
-    uint16_t sa = channel[6];
-    uint16_t sb = channel[7];
-    uint16_t sc = channel[8];
-    uint16_t sd = channel[9];
+    /* Get data from the SBus channels */
+    /* Joysticks */
+    float speed = convert(channel[0], SIGNED, DEAD_ZONE);
+    float turn = convert(channel[1], SIGNED, DEAD_ZONE);
+    float wpn = convert(channel[2], SIGNED, NO_DEAD_ZONE);
+    //uint16_t unused = channel[3];
+    /* Slide controls */
+    float speed_max = convert(channel[4], UNSIGNED, NO_DEAD_ZONE);
+    float turn_max = convert(channel[5], UNSIGNED, NO_DEAD_ZONE);
+    /* Switches */
+    int sa = switch_position(channel[6]);
+    int sb = switch_position(channel[7]);
+    int sc = switch_position(channel[8]);
+    int sd = switch_position(channel[9]);
 
-    /* If inverted we want to reverse the steering control */
-    if (switch_position(sd) == SWITCH_ON)
+    /* Tweak depending on the switch positions */
+    /* If inverted we want to reverse the controls */
+    if (sd == SWITCH_ON)
     {
-
-        turn += 2 * (CHANNEL_MID - turn);
+        turn = -turn;
+        speed = -speed;
     }
+
+    /* Calculate the motor drives */
+    float l = left(speed, turn, speed_max, turn_max);
+    float r = right(speed, turn, speed_max, turn_max);
+    float w = weapon(wpn, sb);
 
     /* Output debigging information */
     if (sbus_rx_framecount%100==0) {
         //ESP_LOGI(TAG, "Channels: %s", outbuffer);
         ESP_LOGD(TAG, "Left: %3.0f, Right: %3.0f, Weapon: %3.0f, SA: %4d, SB: %4d, SC: %4d, SD: %4d",
-                    left(speed, turn, speed_max, turn_max),
-                    right(speed, turn, speed_max, turn_max),
-                    weapon(wpn),
-                    sa, sb, sc, sd
-                );
+                    l, r, w, sa, sb, sc, sd);
     }
 
-    l_motor(left(speed, turn, speed_max, turn_max));
-    r_motor(right(speed, turn, speed_max, turn_max));
-    w_motor(weapon(wpn));
+    l_motor(l);
+    r_motor(r);
+    w_motor(w);
 }
 
 /*
