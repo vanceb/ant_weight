@@ -2,7 +2,7 @@
 #define LIGHTS_H
 
 #define BLINK_INTERVAL 500 //ms
-#define UPDATE_DELAY 100 //ms - max 10Hz
+#define UPDATE_DELAY 40 //ms - max 25Hz
 #define RX_LOST_TIMEOUT 500 //ms
 
 enum light_modes {

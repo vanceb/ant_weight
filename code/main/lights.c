@@ -101,62 +101,70 @@ void lights_normal(strand_t *strand)
     last_update = clock_ms();
 }
 
-void lights_police(strand_t *strand)
+void lights_police(strand_t *strand, unsigned long interval)
 {
-    const int seq_length = 4;
-    static int pattern[] = {0, 1, 2, 1};
-    static int sequence = 0;
-    pixelColor_t colors[] = {pixelFromRGB(0,0,0), pixelFromRGB(0,0,255), pixelFromRGB(255,0,0)};
-    int i;
-    for(i=0; i<strand->numPixels; i++) {
-       strand->pixels[i] = colors[pattern[(sequence + i) % seq_length]];
-    }
-    sequence++;
-    last_update = clock_ms();
-}
-
-void lights_disco(strand_t *strand)
-{
-    int i;
-    uint8_t r, g, b;
-    for (i=0; i<strand->numPixels; i++) {
-        r = 1 << ((uint8_t)esp_random() & 0x07);
-        g = 1 << ((uint8_t)esp_random() & 0x07);
-        b = 1 << ((uint8_t)esp_random() & 0x07);
-        strand->pixels[i] = pixelFromRGB(r,g,b);
-    }   
-    last_update = clock_ms();
-}
-
-void lights_pimp(strand_t *strand)
-{
-    static int sequence = 0;
-    static int update = 1;
-    sequence += update;
-    pixelColor_t pink = pixelFromRGB(1 << sequence, 0, 1 << sequence);   
-    set_color(strand, pink);
-    /* Update ready for next time */
-    if (sequence == 7 || sequence ==0)
-        update = -update;
-    last_update = clock_ms();
-}
-
-void lights_alien(strand_t *strand)
-{
-    int i;
-    static int led = 0;
-    pixelColor_t dark = pixelFromRGB(0,0,0);
-    pixelColor_t green = pixelFromRGB(0,255,0);
-    for (i=0; i<strand->numPixels; i++)
-    {
-        if(i == led) {
-            strand->pixels[i] = green;
-        } else {
-            strand->pixels[i] = dark;
+    if (last_update + interval < clock_ms()) {  
+        const int seq_length = 4;
+        static int pattern[] = {0, 1, 2, 1};
+        static int sequence = 0;
+        pixelColor_t colors[] = {pixelFromRGB(0,0,0), pixelFromRGB(0,0,255), pixelFromRGB(255,0,0)};
+        int i;
+        for(i=0; i<strand->numPixels; i++) {
+        strand->pixels[i] = colors[pattern[(sequence + i) % seq_length]];
         }
+        sequence++;
+        last_update = clock_ms();
     }
-    led = (led + 1) % strand->numPixels;
-    last_update = clock_ms();
+}
+
+void lights_disco(strand_t *strand, unsigned long interval)
+{
+    if (last_update + interval < clock_ms()) {  
+        int i;
+        uint8_t r, g, b;
+        for (i=0; i<strand->numPixels; i++) {
+            r = 1 << ((uint8_t)esp_random() & 0x07);
+            g = 1 << ((uint8_t)esp_random() & 0x07);
+            b = 1 << ((uint8_t)esp_random() & 0x07);
+            strand->pixels[i] = pixelFromRGB(r,g,b);
+        }   
+        last_update = clock_ms();
+    }
+}
+
+void lights_pimp(strand_t *strand, unsigned long interval)
+{
+    if (last_update + interval < clock_ms()) {  
+        static int sequence = 0;
+        static int update = 1;
+        sequence += update;
+        pixelColor_t pink = pixelFromRGB(1 << sequence, 0, 1 << sequence);   
+        set_color(strand, pink);
+        /* Update ready for next time */
+        if (sequence == 7 || sequence ==0)
+            update = -update;
+        last_update = clock_ms();
+    }
+}
+
+void lights_alien(strand_t *strand, unsigned long interval)
+{
+    if (last_update + interval < clock_ms()) {  
+        int i;
+        static int led = 0;
+        pixelColor_t dark = pixelFromRGB(0,0,0);
+        pixelColor_t green = pixelFromRGB(0,255,0);
+        for (i=0; i<strand->numPixels; i++)
+        {
+            if(i == led) {
+                strand->pixels[i] = green;
+            } else {
+                strand->pixels[i] = dark;
+            }
+        }
+        led = (led + 1) % strand->numPixels;
+        last_update = clock_ms();
+    }
 }
 
 void indicator_task(void *pvParameter)
@@ -186,16 +194,16 @@ void indicator_task(void *pvParameter)
                         flash(strand, amber, BLINK_INTERVAL);
                         break;
                     case POLICE:
-                        lights_police(strand);
+                        lights_police(strand, 200);
                         break;
                     case PIMP:
-                        lights_pimp(strand);
+                        lights_pimp(strand, 80);
                         break;
                     case ALIEN:
-                        lights_alien(strand);
+                        lights_alien(strand, 200);
                         break;
                     case DISCO:
-                        lights_disco(strand);
+                        lights_disco(strand, 200);
                         break;
                     default:
                         ESP_LOGE(TAG, "%s", "Unknown light sequence");
