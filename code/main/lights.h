@@ -5,6 +5,17 @@
 #define UPDATE_DELAY 100 //ms - max 10Hz
 #define RX_LOST_TIMEOUT 500 //ms
 
+enum light_modes {
+    NORMAL,
+    HAZARD,
+    POLICE,
+    DISCO,
+    PIMP,
+    ALIEN
+};
+
+extern int light_mode;
+
 /* Configure the LEDs */
 void ledStrandSetup(void);
 

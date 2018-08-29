@@ -27,6 +27,7 @@
 #include "hardware.h"
 #include "motor.h"
 #include "sbus.h"
+#include "lights.h"
 
 static char TAG[] = "motor";
 
@@ -231,6 +232,27 @@ extern void update_motors(uint16_t *channel)
         speed = -speed;
     }
 
+    /* Set the mode the lights should be in */
+    switch (sa) {
+        case SWITCH_OFF:
+            if (sc == SWITCH_OFF)
+                light_mode = NORMAL;
+            else
+                light_mode = NORMAL;
+            break;
+        case SWITCH_MID:
+            if (sc == SWITCH_OFF)
+                light_mode = DISCO;
+            else
+                light_mode = PIMP;
+            break;
+        case SWITCH_ON:
+            if (sc == SWITCH_OFF)
+                light_mode = HAZARD;
+            else
+                light_mode = POLICE;
+            break;
+    }
     /* Calculate the motor drives */
     float l = left(speed, turn, speed_max, turn_max);
     float r = right(speed, turn, speed_max, turn_max);
