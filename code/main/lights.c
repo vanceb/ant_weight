@@ -188,14 +188,14 @@ void indicator_task(void *pvParameter)
                     case POLICE:
                         lights_police(strand);
                         break;
-                    case DISCO:
-                        lights_disco(strand);
-                        break;
                     case PIMP:
                         lights_pimp(strand);
                         break;
                     case ALIEN:
                         lights_alien(strand);
+                        break;
+                    case DISCO:
+                        lights_disco(strand);
                         break;
                     default:
                         ESP_LOGE(TAG, "%s", "Unknown light sequence");

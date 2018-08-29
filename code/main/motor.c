@@ -111,13 +111,21 @@ float convert(uint16_t channel_value, int zero_centered, float dead_zone)
 /* Calculate the left motor drive % depending on the control inputs */
 float left(float speed, float turn, float max_speed, float max_turn)
 {
-    return 100.0 * (speed * max_speed + turn * max_turn);
+    float val;
+    val = 100.0 * (speed * max_speed + turn * max_turn);
+    if(REVERSE_LEFT)
+        val = -val;
+    return val;
 }
 
 /* Calculate the right motor drive % depending on the control inputs */
 float right(float speed, float turn, float max_speed, float max_turn)
 {
-    return 100.0 * (speed * max_speed - turn * max_turn);
+    float val;
+    val = 100.0 * (speed * max_speed - turn * max_turn);
+    if(REVERSE_RIGHT)
+        val = -val;
+    return val;
 }
 
 /* Calculate the weapon motor drive % depending on the control inputs */
@@ -143,6 +151,11 @@ float weapon(float wpn, int mode)
         default:
             ESP_LOGE(TAG, "%s", "Weapon mode switch in unknown position");
     }
+
+    /* Allow for reversing of weapon direction */
+    if(REVERSE_WEAPON)
+        wpn = -wpn;
+
     return 100.0 * wpn;
 }
 
@@ -238,19 +251,19 @@ extern void update_motors(uint16_t *channel)
             if (sc == SWITCH_OFF)
                 light_mode = NORMAL;
             else
-                light_mode = NORMAL;
+                light_mode = PIMP;
             break;
         case SWITCH_MID:
             if (sc == SWITCH_OFF)
-                light_mode = DISCO;
+                light_mode = HAZARD;
             else
-                light_mode = PIMP;
+                light_mode = ALIEN;
             break;
         case SWITCH_ON:
             if (sc == SWITCH_OFF)
-                light_mode = HAZARD;
-            else
                 light_mode = POLICE;
+            else
+                light_mode = DISCO;
             break;
     }
     /* Calculate the motor drives */

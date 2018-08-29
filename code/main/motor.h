@@ -6,7 +6,12 @@
 /* Value below which motors do not drive */
 #define NO_DEAD_ZONE 0.0
 #define DEAD_ZONE 0.05
-#define WPN_DEAD_ZONE 0.5
+#define WPN_DEAD_ZONE 0.8
+
+/* Allow for motor direction changes */
+#define REVERSE_LEFT 0
+#define REVERSE_RIGHT 0
+#define REVERSE_WEAPON 1
 
 /* What is the paramerters for a servo channel? */
 #define CHANNEL_MID 992
