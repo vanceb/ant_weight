@@ -63,14 +63,15 @@ void flash(strand_t *strand, pixelColor_t color, unsigned long interval)
     int i;
     if(last_update + interval < clock_ms()) {
         pixelColor_t dark = pixelFromRGB(0,0,0);
+        if(strand->pixels[0].r == color.r &&
+           strand->pixels[0].g == color.g &&
+           strand->pixels[0].b == color.b)
+        {
+            color = dark;
+        }
         for (i=0; i<strand->numPixels; i++)
-            if(strand->pixels[i].r == dark.r &&
-            strand->pixels[i].g == dark.g &&
-            strand->pixels[i].b == dark.b
-            )
-                strand->pixels[i] = color;
-            else
-                strand->pixels[i] = dark;
+            strand->pixels[i] = color;
+        }
         last_update = clock_ms();
     }
 }
@@ -105,7 +106,7 @@ void lights_police(strand_t *strand, unsigned long interval)
 {
     if (last_update + interval < clock_ms()) {  
         const int seq_length = 4;
-        static int pattern[] = {0, 1, 2, 1};
+        static int pattern[] = {0, 1, 2, 1, 1, 2, 1, 2};
         static int sequence = 0;
         pixelColor_t colors[] = {pixelFromRGB(0,0,0), pixelFromRGB(0,0,255), pixelFromRGB(255,0,0)};
         int i;
