@@ -41,6 +41,6 @@ void app_main()
 
     ESP_LOGD(TAG, "Minimal Stack Size: %d", configMINIMAL_STACK_SIZE);
     /* Run the tasks for display LEDs and control */
-    xTaskCreate(&indicator_task, "indicator_task", configMINIMAL_STACK_SIZE, NULL, 5, NULL);
+    xTaskCreate(&indicator_task, "indicator_task", 2 * configMINIMAL_STACK_SIZE, NULL, 5, NULL);
     xTaskCreate(sbus_event_task, "sbus_event_task", 2048, NULL, 12, NULL);
 }

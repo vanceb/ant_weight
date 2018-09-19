@@ -68,6 +68,15 @@ static void brushed_motor_stop(mcpwm_unit_t mcpwm_num, mcpwm_timer_t timer_num)
     mcpwm_set_signal_low(mcpwm_num, timer_num, MCPWM_OPR_B);
 }
 
+/**
+ * @brief motor brake
+ */
+static void brushed_motor_brake(mcpwm_unit_t mcpwm_num, mcpwm_timer_t timer_num)
+{
+    mcpwm_set_signal_high(mcpwm_num, timer_num, MCPWM_OPR_A);
+    mcpwm_set_signal_high(mcpwm_num, timer_num, MCPWM_OPR_B);
+}
+
 /* Normalise takes a channel value and returns a float 
  * If zero_centered is not 0 then return value is nominally in the -1.0 to 1.0 range,
  * if zero_centered is 0 then return value is nominally in the 0.0 - 1.0 range,
@@ -184,11 +193,14 @@ void r_motor(float speed)
 /* Drive the weapon motor based on an input of -1.0 - 1.0 */
 void w_motor(float speed)
 {
-    if (speed >= 0.0) {
+    if (speed > 0.0) {
         brushed_motor_forward(MCPWM_UNIT_0, MCPWM_TIMER_2, speed);
-    } else {
+    } else if (speed < 0.0) {
         speed = -speed;
         brushed_motor_backward(MCPWM_UNIT_0, MCPWM_TIMER_2, speed);
+    } else {
+        /* Hold the motors where they are */
+        brushed_motor_brake(MCPWM_UNIT_0, MCPWM_TIMER_2); 
     }
 }
 

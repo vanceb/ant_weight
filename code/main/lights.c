@@ -61,7 +61,7 @@ void ledStrandSetup(void) {
 void flash(strand_t *strand, pixelColor_t color, unsigned long interval)
 {
     int i;
-    if(last_update + interval < clock_ms()) {
+    if (last_update + interval < clock_ms()) {
         pixelColor_t dark = pixelFromRGB(0,0,0);
         if(strand->pixels[0].r == color.r &&
            strand->pixels[0].g == color.g &&
@@ -69,7 +69,7 @@ void flash(strand_t *strand, pixelColor_t color, unsigned long interval)
         {
             color = dark;
         }
-        for (i=0; i<strand->numPixels; i++)
+        for (i=0; i<strand->numPixels; i++) {
             strand->pixels[i] = color;
         }
         last_update = clock_ms();
